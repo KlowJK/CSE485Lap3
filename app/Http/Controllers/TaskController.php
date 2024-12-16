@@ -1,90 +1,76 @@
 <?php
 
+
 namespace App\Http\Controllers;
 
+use Illuminate\Support\Facades\Auth;
 use App\Models\Task;
 use Illuminate\Http\Request;
 
 class TaskController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
-        $tasks = Task::all();
-        return view('tasks.index', compact('tasks'));
+        $user_id = auth::id();
+        $name = auth::user()->name;
+        $tasks = Task::with('user')->where('user_id', $user_id)->orderBy('updated_at', 'desc')->paginate(10);
+        return view('tasks.index', compact('tasks', 'name'));
     }
-
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
-        //
         return view('tasks.create');
     }
-
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        //
-        $request->validate([
+        $validatedData = $request->validate([
             'title' => 'required',
             'description' => 'required',
+            'long_description' => 'required',
         ]);
+        $validatedData['user_id'] = auth::id();
+        Task::create($validatedData);
 
-        Task::create($request->all());
-
-        return redirect()->route('tasks.index')->with('success', 'Task created successfully.');
+        return redirect()->route('tasks.index')->with('success', 'Thêm nhiệm vụ thành công.');
     }
-
-    /**
-     * Display the specified resource.
-     */
     public function show(string $id)
     {
-        //
         $task = Task::find($id);
-        return view('tasks.show', compact('task'));
+        return view('tasks.detail', compact('task'));
     }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit(string $id)
     {
-        //
-        return view('tasks.edit', compact('task'));
+        $task = Task::find($id);
+        return view('tasks.update', compact('task'));
     }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Task $task)
+    public function update(Request $request, string $id)
     {
-        //
 
-        $request->validate([
+        $validatedData = $request->validate([
             'title' => 'required',
             'description' => 'required',
+            'long_description' => 'required',
         ]);
-
-        $task->update($request->all());
-
-        return redirect()->route('tasks.index')->with('success', 'Task updated successfully.');
+        $task = Task::find($id);
+        $task->update($validatedData);
+        return redirect()->route('tasks.index')->with('success', 'Cập nhật nhiệm vụ thành công.');
     }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Task $task)
+    public function destroy(string $id)
     {
-        //
-        $task->delete();
-
-        return redirect()->route('tasks.index')->with('success', 'Task deleted successfully.');
+        Task::destroy($id);
+        return redirect()->route('tasks.index')->with('success', 'Xóa nhiệm vụ thành công.');
+    }
+    public function updatecompleted(string $id)
+    {
+        $task = Task::find($id);
+        $task->completed = !$task->completed;
+        $task->save();
+        return redirect()->route('tasks.show', $id)->with('success', 'Cập nhật trạng thái nhiệm vụ thành công.');
+    }
+    public function findcompleted(string $completed)
+    {
+        $user_id = auth::id();
+        $name = auth::user()->name;
+        $tasks = Task::with('user')->where('user_id', $user_id)->where('completed', $completed)->orderBy('updated_at', 'desc')->paginate(10);
+        return view('tasks.index', compact('tasks', 'name'));
     }
 }

@@ -16,11 +16,12 @@ class TaskSeeder extends Seeder
     {
         $faker = Faker::create();
 
-        for ($i = 0; $i < 10; $i++) {
+        for ($i = 1; $i <= 300; $i++) {
             Task::create([
                 'title' => $faker->sentence(),
                 'description' => $faker->paragraph(),
                 'long_description' => $faker->optional()->text(),
+                'user_id' => $faker->numberBetween(1, 12),
                 'completed' => $faker->boolean(),
             ]);
         }

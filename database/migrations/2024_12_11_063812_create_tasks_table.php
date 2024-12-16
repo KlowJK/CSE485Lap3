@@ -16,8 +16,12 @@ return new class extends Migration
             $table->string('title');
             $table->text('description');
             $table->text('long_description')->nullable();
+            $table->unsignedBigInteger('user_id');
             $table->boolean('completed')->default(false);
             $table->timestamps();
+
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade'); // Khóa ngoại liên kết với bảng users
+
         });
     }
 
